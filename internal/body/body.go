@@ -6,5 +6,9 @@ type Body interface {
 	// Type returns the body type
 	Type() string
 
-	io.ReadCloser
+	Encode() io.Reader
+
+	SetItem(k string, v interface{})
+
+	Set(v interface{})
 }

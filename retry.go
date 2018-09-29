@@ -8,11 +8,6 @@ func (req *Request) Retry(attempts int, interval time.Duration) *Request {
 	return req
 }
 
-func (req *Request) Timeout(timeout time.Duration) *Request {
-	req.client.Timeout = timeout
-	return req
-}
-
 func (req *Request) succeeded(c int) bool {
 	for _, code := range req.successCode {
 		if c == code {

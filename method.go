@@ -25,3 +25,7 @@ func Post(url string) *Request {
 func Delete(url string) *Request {
 	return newReq(DELETE, url)
 }
+
+func Patch(url string) *Request {
+	return newReq(PATCH, url)
+}
