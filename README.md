@@ -2,6 +2,8 @@
 
 Yet Another http Request Library in golang. Because why not ?
 
+Work In Progress
+
 ## Install
 
 ```
