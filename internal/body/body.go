@@ -8,7 +8,7 @@ type Body interface {
 
 	Encode() io.Reader
 
-	SetItem(k string, v interface{})
+	SetItem(k string, v interface{}) error
 
-	Set(v interface{})
+	Set(v interface{}) error
 }

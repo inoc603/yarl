@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/inoc603/yarl/internal/body"
@@ -16,6 +17,8 @@ type Request struct {
 	client  http.Client
 	req     *http.Request
 	cookies []*http.Cookie
+
+	query url.Values
 
 	validator ResponseValidator
 
@@ -32,7 +35,10 @@ func newReq(method, url string) *Request {
 		successCode: []int{200},
 	}
 
-	r.req, r.err = http.NewRequest(method, url, r.body)
+	r.req, r.err = http.NewRequest(method, url, nil)
+	if r.req != nil {
+		r.query = r.req.URL.Query()
+	}
 	return r
 }
 
@@ -40,7 +46,7 @@ func (req *Request) hasError() bool {
 	return req.req == nil || req.err != nil
 }
 
-// WithContext sets a context for the request. Context are valid even through
+// WithContext sets a context for the request. Context are valid through
 // retries and redirects.
 func (req *Request) WithContext(ctx context.Context) *Request {
 	if req.hasError() {
@@ -91,7 +97,21 @@ func (req *Request) Validator(v ResponseValidator) *Request {
 
 // Do makes the request and returns a reponse.
 func (req *Request) Do() (*Response, error) {
-	return nil, nil
+	req.req.URL.RawQuery = req.query.Encode()
+	raw, err := req.client.Do(req.req)
+	resp := &Response{
+		Raw: raw,
+	}
+	return resp, err
+}
+
+func (req *Request) do() (*Response, error) {
+	req.req.URL.RawQuery = req.query.Encode()
+	raw, err := req.client.Do(req.req)
+	resp := &Response{
+		Raw: raw,
+	}
+	return resp, err
 }
 
 // DoMarshal makes the request and marshal the response body to the given
@@ -99,17 +119,16 @@ func (req *Request) Do() (*Response, error) {
 // marshalled, the body content can still be used from the response. If the
 // response is considered failed, the body will not be marshalled.
 func (req *Request) DoMarshal(v interface{}) (*Response, error) {
-	return nil, nil
+	resp, err := req.Do()
+	if err != nil {
+		return resp, err
+	}
+
+	return resp, resp.BodyMarshal(v)
 }
 
 // DoSilent makes the request and only returns the error. Whether a response is
 // valid or not can be deermined by MaxCode. The response body will not be read.
 func (req *Request) DoSilent() error {
 	return nil
-}
-
-// DoStd makes the request and returns the raw http.Response without processing
-// the response body. It's up to the caller to handle the response.
-func (req *Request) DoStd() (*http.Response, error) {
-	return req.client.Do(req.req)
 }

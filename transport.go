@@ -1,6 +1,7 @@
 package yarl
 
 import (
+	"net"
 	"net/http"
 	"net/url"
 
@@ -20,6 +21,29 @@ func (req *Request) Transport(r http.RoundTripper) *Request {
 	return req
 }
 
+// UnixSocket sets the request to be sent to a unix socket.
+func (req *Request) UnixSocket(path string) *Request {
+	if req.hasError() {
+		return req
+	}
+
+	transport, ok := req.client.Transport.(*http.Transport)
+	if !ok {
+		req.err = errors.Errorf("can't set dialer for custom transport")
+	}
+
+	if transport == nil {
+		transport = &http.Transport{}
+		req.client.Transport = transport
+	}
+
+	transport.Dial = func(_, _ string) (net.Conn, error) {
+		return net.Dial("unix", path)
+	}
+
+	return req
+}
+
 // Proxy sets the proxy used to perform the request. It supports http/https, and
 // socks5 proxy.
 func (req *Request) Proxy(proxyURL string) *Request {
@@ -30,6 +54,11 @@ func (req *Request) Proxy(proxyURL string) *Request {
 	transport, ok := req.client.Transport.(*http.Transport)
 	if !ok {
 		req.err = errors.Errorf("can't set proxy for custom transport")
+	}
+
+	if transport == nil {
+		transport = &http.Transport{}
+		req.client.Transport = transport
 	}
 
 	u, err := url.Parse(proxyURL)

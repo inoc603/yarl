@@ -6,7 +6,7 @@ func (req *Request) Query(k, v string) *Request {
 		return req
 	}
 
-	req.req.URL.Query().Add(k, v)
+	req.query.Add(k, v)
 	return req
 }
 
