@@ -2,7 +2,7 @@
 
 Yet Another http Request Library in golang. Because why not ?
 
-Work In Progress
+**Work In Progress. Does not work at the moment**
 
 ## Install
 
@@ -13,7 +13,28 @@ go get -u -v github.com/inoc603/yarl
 ## Usage
 
 ```go
-resp, err := yarl.Get("http://google.com").Do()
+resp := yarl.Get("http://example.com").Do()
+
+if resp.Error() == nil {
+        fmt.Println(resp.StatusCode())
+        // Get response body as a reader
+        io.Copy(os.Stdout, resp.Body())
+        // Get response as a string or bytes
+        fmt.Println(resp.BodyString(), resp.BodyBytes())
+}
+
+// Marshal response body to a struct
+var body struct {
+        K string `json:"k"`
+}
+
+resp, err := yarl.Get("http://example.com").
+        DoMarshal(&body)
+
+if err != nil {
+        // Response body can still be used if marshalling failed
+        fmt.Printf("error: %v; body: %s", err, resp.BodyString())
+}
 ```
 
 ### Setting headers
@@ -44,15 +65,40 @@ yarl.Get("http://github.com/inoc603").
         }{"v4", 5})
 ```
 
-### Setting body
+### JSON body
 
 ```go
-var body struct {
-        K string
-}
-
-yarl.Get("http://github.com/inoc603").
+// From a struct
+body := struct {
+        K string `json:"k"`
+}{"value"}
+yarl.Post("http://github.com/inoc603").
         Body(&body)
+
+// From a map
+mapBody := map[string]interface{}{
+        "key": "value",
+}
+yarl.Post("http://github.com/inoc603").
+        Body(mapBody)
+
+// From a string or bytes
+yarl.Post("http://github.com/inoc603").
+        Body(`{"key": { "nested": 1 }}`)
+
+yarl.Post("http://github.com/inoc603").
+        Body([]byte(`{"key": { "nested": 1 }}`))
+```
+
+### Multipart Body
+
+```go
+yarl.Post("http://github.com/inoc603").
+        Multipart().
+        File("./file1.txt").
+        File("./file2.txt", "field_name").
+        FileFromReader(bytes.NewBuffer(content), "file3.txt", "field_name_2").
+        Do()
 ```
 
 ### Retry

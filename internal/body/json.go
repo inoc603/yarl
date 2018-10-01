@@ -13,6 +13,10 @@ type JSON struct {
 	buffer []byte
 }
 
+func NewJSON() *JSON {
+	return &JSON{}
+}
+
 func (body *JSON) Type() string {
 	return "json"
 }
@@ -47,4 +51,8 @@ func (body *JSON) Set(value interface{}) error {
 	}
 
 	return nil
+}
+
+func (body *JSON) IsEmpty() bool {
+	return len(body.buffer) == 0
 }

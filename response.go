@@ -16,6 +16,11 @@ type Response struct {
 	// Raw is the underlying http.Response
 	Raw *http.Response
 
+	err error
+
+	// FailedAttempts keeps all previous failed attempts through retries
+	FailedAttempts []*Response
+
 	// bodyCache caches the response body for latter use
 	bodyCache []byte
 }
@@ -26,16 +31,32 @@ func newResponse(raw *http.Response) *Response {
 	}
 }
 
+func (resp *Response) Error() error {
+	return resp.err
+}
+
 func (resp *Response) StatusCode() int {
+	if resp.Raw == nil {
+		return 0
+	}
 	return resp.Raw.StatusCode
 }
 
 func (resp *Response) contentType() string {
+	if resp.Raw == nil {
+		return ""
+	}
 	return resp.Raw.Header.Get("Content-Type")
 }
 
 // Body returns the body as io.Reader
 func (resp *Response) Body() io.Reader {
+	if resp.Raw == nil {
+		// TODO: Maybe we should not return nil reader here to avoid
+		// possible panic?
+		return nil
+	}
+
 	if resp.bodyCache != nil {
 		return bytes.NewBuffer(resp.bodyCache)
 	}

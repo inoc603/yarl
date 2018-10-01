@@ -5,8 +5,6 @@ import (
 )
 
 func (req *Request) Retry(attempts int, interval time.Duration) *Request {
-	req.retry = attempts
-	req.interval = interval
 	return req
 }
 
@@ -19,41 +17,29 @@ func (req *Request) succeeded(c int) bool {
 	return false
 }
 
-type ResponseError struct {
-	Response *Response
-	Err      error
-}
-
-func (e *ResponseError) Error() string {
-	return e.Err.Error()
-}
-
-type Executor interface {
-	Do(*Response) []*ResponseError
-}
-
-type RetryExecutor struct {
-	Attempt  int
-	Interval time.Duration
-	// Context       context.Context
-}
-
-func (exe *RetryExecutor) Do(req *Request) []*ResponseError {
-	if exe.Attempt < 0 {
-		exe.Attempt = 1
+func (req *Request) doWithRetry() *Response {
+	if req.retry < 0 {
+		req.retry = 1
 	}
 
-	var res []*ResponseError
+	var failed []*Response
+	var res *Response
+	defer func() { res.FailedAttempts = failed }()
 
-	for i := 0; i < exe.Attempt; i++ {
-		resp, err := req.do()
-		res = append(res, &ResponseError{resp, err})
+	for i := 0; i < req.retry; i++ {
+		resp, err := req.doRaw()
 		if err == nil && req.validator(resp) {
 			return res
 		}
 
+		failed = append(failed, resp)
+
+		if i == req.retry-1 {
+			return res
+		}
+
 		select {
-		case <-time.After(exe.Interval):
+		case <-time.After(req.interval):
 			continue
 		case <-req.req.Context().Done():
 			return res

@@ -11,18 +11,22 @@ import (
 )
 
 type Request struct {
-	retry    int
-	interval time.Duration
-
 	client  http.Client
 	req     *http.Request
 	cookies []*http.Cookie
+
+	basePath string
 
 	query url.Values
 
 	validator ResponseValidator
 
 	body body.Body
+
+	redirectPolicies []RedirectPolicy
+
+	retry    int
+	interval time.Duration
 
 	output io.Writer
 
@@ -39,11 +43,24 @@ func newReq(method, url string) *Request {
 	if r.req != nil {
 		r.query = r.req.URL.Query()
 	}
+
 	return r
 }
 
 func (req *Request) hasError() bool {
 	return req.req == nil || req.err != nil
+}
+
+// BasePath sets a common base path for all requests from this instance
+func (req *Request) BasePath(p string) *Request {
+	req.basePath = p
+	return req
+}
+
+// Shared makes the request a template to be shared with futures calls.
+// TODO: More detailed description
+func (req *Request) Shared() *Request {
+	return req
 }
 
 // WithContext sets a context for the request. Context are valid through
@@ -105,8 +122,16 @@ func (req *Request) Do() (*Response, error) {
 	return resp, err
 }
 
-func (req *Request) do() (*Response, error) {
+func (req *Request) doRaw() (*Response, error) {
 	req.req.URL.RawQuery = req.query.Encode()
+
+	req.client.CheckRedirect = func(r *http.Request, via []*http.Request) error {
+		// for _, p := range req.redirectPolicies {
+		// TODO
+		// }
+		return nil
+	}
+
 	raw, err := req.client.Do(req.req)
 	resp := &Response{
 		Raw: raw,
