@@ -8,9 +8,17 @@ type Body interface {
 
 	IsEmpty() bool
 
-	Encode() io.Reader
+	Encode() io.ReadCloser
 
 	SetItem(k string, v interface{}) error
 
 	Set(v interface{}) error
+}
+
+type ReadCloser struct {
+	io.Reader
+}
+
+func (r *ReadCloser) Close() error {
+	return nil
 }

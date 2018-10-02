@@ -29,8 +29,8 @@ func (body *Multipart) Type() string {
 	return "multipart"
 }
 
-func (body *Multipart) Encode() io.Reader {
-	return bytes.NewBuffer(body.buffer)
+func (body *Multipart) Encode() io.ReadCloser {
+	return &ReadCloser{bytes.NewBuffer(body.buffer)}
 }
 
 func (body *Multipart) SetItem(k string, v interface{}) error {

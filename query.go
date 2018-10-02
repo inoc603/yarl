@@ -6,7 +6,9 @@ func (req *Request) Query(k, v string) *Request {
 		return req
 	}
 
-	req.query.Add(k, v)
+	q := req.url.Query()
+	q.Add(k, v)
+	req.url.RawQuery = q.Encode()
 	return req
 }
 

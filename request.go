@@ -8,16 +8,21 @@ import (
 	"time"
 
 	"github.com/inoc603/yarl/internal/body"
+	"github.com/pkg/errors"
 )
 
 type Request struct {
-	client  http.Client
-	req     *http.Request
+	client *http.Client
+
 	cookies []*http.Cookie
 
-	basePath string
+	method string
 
-	query url.Values
+	url *url.URL
+
+	header http.Header
+
+	ctx context.Context
 
 	validator ResponseValidator
 
@@ -32,45 +37,61 @@ type Request struct {
 
 	successCode []int
 	err         error
+
+	shared bool
 }
 
-func newReq(method, url string) *Request {
+func newReq(method string) *Request {
 	r := &Request{
 		successCode: []int{200},
-	}
-
-	r.req, r.err = http.NewRequest(method, url, nil)
-	if r.req != nil {
-		r.query = r.req.URL.Query()
+		header:      make(http.Header),
+		client:      &http.Client{},
+		validator:   func(_ *Response) bool { return true },
 	}
 
 	return r
 }
 
 func (req *Request) hasError() bool {
-	return req.req == nil || req.err != nil
+	return req.err != nil
 }
 
 // BasePath sets a common base path for all requests from this instance
 func (req *Request) BasePath(p string) *Request {
-	req.basePath = p
+	u := copyURL(req.url)
+	u.Path = p
+	req.url = u
 	return req
 }
 
-// Shared makes the request a template to be shared with futures calls.
-// TODO: More detailed description
-func (req *Request) Shared() *Request {
+// URL sets the request url.
+func (req *Request) URL(rawURL string) *Request {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		req.err = err
+		return req
+	}
+
+	req.url = u
+	return req
+}
+
+func (req *Request) Copy() *Request {
+	return req
+}
+
+// Host sets a common host for all requests from this instance
+func (req *Request) Host(h string) *Request {
+	u := copyURL(req.url)
+	u.Host = h
+	req.url = u
 	return req
 }
 
 // WithContext sets a context for the request. Context are valid through
 // retries and redirects.
 func (req *Request) WithContext(ctx context.Context) *Request {
-	if req.hasError() {
-		return req
-	}
-
-	req.req = req.req.WithContext(ctx)
+	req.ctx = ctx
 	return req
 }
 
@@ -113,17 +134,22 @@ func (req *Request) Validator(v ResponseValidator) *Request {
 }
 
 // Do makes the request and returns a reponse.
-func (req *Request) Do() (*Response, error) {
-	req.req.URL.RawQuery = req.query.Encode()
-	raw, err := req.client.Do(req.req)
-	resp := &Response{
-		Raw: raw,
+func (req *Request) Do() *Response {
+	var body io.ReadCloser
+	if req.body != nil {
+		body = req.body.Encode()
 	}
-	return resp, err
-}
 
-func (req *Request) doRaw() (*Response, error) {
-	req.req.URL.RawQuery = req.query.Encode()
+	r, err := http.NewRequest(req.method, req.url.String(), body)
+	if err != nil {
+		return &Response{err: errors.Wrap(err, "create request")}
+	}
+
+	r.Header = req.header
+
+	if req.ctx != nil {
+		r = r.WithContext(req.ctx)
+	}
 
 	req.client.CheckRedirect = func(r *http.Request, via []*http.Request) error {
 		// for _, p := range req.redirectPolicies {
@@ -132,11 +158,7 @@ func (req *Request) doRaw() (*Response, error) {
 		return nil
 	}
 
-	raw, err := req.client.Do(req.req)
-	resp := &Response{
-		Raw: raw,
-	}
-	return resp, err
+	return req.doWithRetry(r)
 }
 
 // DoMarshal makes the request and marshal the response body to the given
@@ -144,8 +166,8 @@ func (req *Request) doRaw() (*Response, error) {
 // marshalled, the body content can still be used from the response. If the
 // response is considered failed, the body will not be marshalled.
 func (req *Request) DoMarshal(v interface{}) (*Response, error) {
-	resp, err := req.Do()
-	if err != nil {
+	resp := req.Do()
+	if err := resp.Error(); err != nil {
 		return resp, err
 	}
 

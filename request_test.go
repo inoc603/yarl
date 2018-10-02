@@ -6,14 +6,14 @@ import (
 )
 
 func TestTmp(t *testing.T) {
-	resp, err := Get("http://whatever/v1.24/containers/json").
+	resp := Get("http://whatever/v1.24/containers/json").
 		UnixSocket("/var/run/docker.sock").
 		Do()
 
-	if err == nil {
+	if resp.Error() == nil {
 		fmt.Println(resp.BodyString())
 	} else {
-		fmt.Println(err)
+		fmt.Println(resp.Error())
 	}
 }
 

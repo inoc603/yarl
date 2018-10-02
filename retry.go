@@ -1,6 +1,7 @@
 package yarl
 
 import (
+	"net/http"
 	"time"
 )
 
@@ -17,18 +18,24 @@ func (req *Request) succeeded(c int) bool {
 	return false
 }
 
-func (req *Request) doWithRetry() *Response {
-	if req.retry < 0 {
+func (req *Request) doWithRetry(r *http.Request) *Response {
+	if req.retry <= 0 {
 		req.retry = 1
 	}
 
 	var failed []*Response
-	var res *Response
+	res := &Response{}
 	defer func() { res.FailedAttempts = failed }()
 
 	for i := 0; i < req.retry; i++ {
-		resp, err := req.doRaw()
+		raw, err := req.client.Do(r)
+		resp := &Response{
+			Raw: raw,
+			err: err,
+		}
+
 		if err == nil && req.validator(resp) {
+			res = resp
 			return res
 		}
 
@@ -41,7 +48,7 @@ func (req *Request) doWithRetry() *Response {
 		select {
 		case <-time.After(req.interval):
 			continue
-		case <-req.req.Context().Done():
+		case <-r.Context().Done():
 			return res
 		}
 	}

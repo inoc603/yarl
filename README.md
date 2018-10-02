@@ -2,7 +2,7 @@
 
 Yet Another http Request Library in golang. Because why not ?
 
-**Work In Progress. Does not work at the moment**
+**Work In Progress**
 
 ## Install
 
@@ -103,7 +103,10 @@ yarl.Post("http://github.com/inoc603").
 
 ### Retry
 
-TODO
+```go
+yarl.Get("http://example.com").
+        Retry(3, time.Second)
+```
 
 ### Redirect
 
@@ -112,13 +115,22 @@ TODO
 ### Unix Socket
 
 ```go
-resp, err := Get("http://whatever/v1.24/containers/json").
+yarl.Get("http://whatever/v1.24/containers/json").
         UnixSocket("/var/run/docker.sock").
         Do()
+```
 
-if err == nil {
-        fmt.Println(resp.BodyString())
-} else {
-        fmt.Println(err)
-}
+### Reuse configurations
+
+TODO: Make reusing reqeust thread-safe
+
+```go
+v1 := yarl.New("http://example.com").
+        BasePath("/api/v1")
+
+// following calls will reuse v1
+v1.Get("/example").Do()
+v1.Post("/user/%d", 1).Body(body).Do()
+
+// TODO
 ```
