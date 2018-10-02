@@ -19,15 +19,15 @@ func (req *Request) succeeded(c int) bool {
 }
 
 func (req *Request) doWithRetry(r *http.Request) *Response {
-	if req.retry <= 0 {
-		req.retry = 1
+	if req.retryMax <= 0 {
+		req.retryMax = 1
 	}
 
 	var failed []*Response
 	res := &Response{}
 	defer func() { res.FailedAttempts = failed }()
 
-	for i := 0; i < req.retry; i++ {
+	for i := 0; i < req.retryMax; i++ {
 		raw, err := req.client.Do(r)
 		resp := &Response{
 			Raw: raw,
@@ -41,12 +41,12 @@ func (req *Request) doWithRetry(r *http.Request) *Response {
 
 		failed = append(failed, resp)
 
-		if i == req.retry-1 {
+		if i == req.retryMax-1 {
 			return res
 		}
 
 		select {
-		case <-time.After(req.interval):
+		case <-time.After(req.retryInterval):
 			continue
 		case <-r.Context().Done():
 			return res

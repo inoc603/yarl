@@ -4,25 +4,22 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"time"
 
 	"github.com/inoc603/yarl/internal/body"
 	"github.com/pkg/errors"
+	"golang.org/x/net/publicsuffix"
 )
 
 type Request struct {
-	client *http.Client
-
+	method  string
+	url     *url.URL
+	client  *http.Client
 	cookies []*http.Cookie
-
-	method string
-
-	url *url.URL
-
-	header http.Header
-
-	ctx context.Context
+	header  http.Header
+	ctx     context.Context
 
 	validator ResponseValidator
 
@@ -30,10 +27,8 @@ type Request struct {
 
 	redirectPolicies []RedirectPolicy
 
-	retry    int
-	interval time.Duration
-
-	output io.Writer
+	retryMax      int
+	retryInterval time.Duration
 
 	successCode []int
 	err         error
@@ -42,10 +37,14 @@ type Request struct {
 }
 
 func newReq(method string) *Request {
+	jar, _ := cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
+
 	r := &Request{
 		successCode: []int{200},
 		header:      make(http.Header),
-		client:      &http.Client{},
+		client:      &http.Client{Jar: jar},
 		validator:   func(_ *Response) bool { return true },
 	}
 
