@@ -20,13 +20,12 @@ func (req *Request) succeeded(c int) bool {
 	return false
 }
 
-func (req *Request) doWithRetry(r *http.Request) *Response {
+func (req *Request) doWithRetry(r *http.Request) (res *Response) {
 	if req.retryMax <= 0 {
 		req.retryMax = 1
 	}
 
 	var failed []*Response
-	res := &Response{}
 	defer func() { res.FailedAttempts = failed }()
 
 	for i := 0; i < req.retryMax; i++ {
@@ -35,16 +34,15 @@ func (req *Request) doWithRetry(r *http.Request) *Response {
 			Raw: raw,
 			err: err,
 		}
+		res = resp
 
 		if err == nil && req.validator(resp) {
-			res = resp
 			return res
 		}
 
 		failed = append(failed, resp)
 
 		if i == req.retryMax-1 {
-			res = resp
 			return res
 		}
 
