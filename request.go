@@ -144,7 +144,13 @@ func (req *Request) Do() *Response {
 		return &Response{err: errors.Wrap(err, "create request")}
 	}
 
-	r.Header = req.header
+	for k := range req.header {
+		r.Header.Add(k, req.header.Get(k))
+	}
+
+	for _, c := range req.cookies {
+		r.AddCookie(c)
+	}
 
 	if req.ctx != nil {
 		r = r.WithContext(req.ctx)

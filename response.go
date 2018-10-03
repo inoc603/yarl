@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
+	"mime"
 	"net/http"
-	"strings"
 
 	"github.com/inoc603/yarl/internal/pipe"
 	"github.com/pkg/errors"
@@ -88,7 +88,13 @@ func (resp *Response) BodyString() (string, error) {
 // BodyMarshal marshalls the body content to the given interface according to the
 // content type.
 func (resp *Response) BodyMarshal(v interface{}) error {
-	if strings.Contains(resp.contentType(), "application/json") {
+	t, _, err := mime.ParseMediaType(resp.contentType())
+	if err != nil {
+		return errors.Wrap(err, "parse content-type")
+	}
+
+	switch t {
+	case "application/json":
 		return json.NewDecoder(resp.Body()).Decode(v)
 	}
 	return errors.Errorf("unknown body type %s", resp.contentType())

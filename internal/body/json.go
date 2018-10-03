@@ -18,7 +18,7 @@ func NewJSON() *JSON {
 }
 
 func (body *JSON) Type() string {
-	return "json"
+	return "application/json"
 }
 
 func (body *JSON) Encode() io.ReadCloser {

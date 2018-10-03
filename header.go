@@ -21,3 +21,8 @@ func (req *Request) Headers(v interface{}) *Request {
 
 	return req
 }
+
+func (req *Request) Cookie(c *http.Cookie) *Request {
+	req.cookies = append(req.cookies, c)
+	return req
+}
