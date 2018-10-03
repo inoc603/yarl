@@ -2,6 +2,7 @@ package yarl
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -94,7 +95,7 @@ func (req *Request) WithContext(ctx context.Context) *Request {
 	return req
 }
 
-// Timeout sets timeout on the request
+// Timeout sets timeout on the the http client
 func (req *Request) Timeout(t time.Duration) *Request {
 	if req.hasError() {
 		return req
@@ -111,10 +112,6 @@ type ResponseValidator func(*Response) bool
 // code. If status code of a response is larger than it, the response is
 // considered to be failed.
 func (req *Request) MaxCode(code int) *Request {
-	if req.hasError() {
-		return req
-	}
-
 	req.validator = func(resp *Response) bool {
 		return resp.StatusCode() < code
 	}
@@ -123,12 +120,7 @@ func (req *Request) MaxCode(code int) *Request {
 
 // Validator sets a custom response validator
 func (req *Request) Validator(v ResponseValidator) *Request {
-	if req.hasError() {
-		return req
-	}
-
 	req.validator = v
-
 	return req
 }
 
@@ -156,11 +148,18 @@ func (req *Request) Do() *Response {
 		r = r.WithContext(req.ctx)
 	}
 
-	req.client.CheckRedirect = func(r *http.Request, via []*http.Request) error {
-		// for _, p := range req.redirectPolicies {
-		// TODO
-		// }
-		return nil
+	// Apply redirect policy if any. When no policy is given, the client
+	// will use the default policy of http.Client, which stops at 10 redirections
+	if len(req.redirectPolicies) > 0 {
+		req.client.CheckRedirect = func(r *http.Request, via []*http.Request) error {
+			fmt.Println("check", r)
+			for _, p := range req.redirectPolicies {
+				if err := p(r, via); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
 	}
 
 	return req.doWithRetry(r)

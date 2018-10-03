@@ -6,7 +6,7 @@ import (
 	"github.com/inoc603/yarl/internal/assert"
 )
 
-const exampleURL = "http://github.com/inoc603/yarl "
+const exampleURL = "http://github.com/inoc603/yarl"
 
 func TestQuery(t *testing.T) {
 	a := assert.New(t)

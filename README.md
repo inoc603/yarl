@@ -4,7 +4,7 @@
 
 Yet Another http Request Library in golang. Because why not ?
 
-**Work In Progress**
+**Work In Progress. But apis in README should just work.**
 
 ## Install
 
@@ -70,19 +70,19 @@ yarl.Get("http://github.com/inoc603").
 ### JSON body
 
 ```go
-// From a struct
-body := struct {
-        K string `json:"k"`
-}{"value"}
+// From any JSON-serializable variable
 yarl.Post("http://github.com/inoc603").
-        Body(&body)
+        Body(&struct {
+                K string `json:"k"`
+        }{"value"})
 
-// From a map
-mapBody := map[string]interface{}{
-        "key": "value",
-}
 yarl.Post("http://github.com/inoc603").
-        Body(mapBody)
+        Body(map[string]interface{}{
+                "key": "value",
+        })
+
+yarl.Post("http://github.com/inoc603").
+        Body([]int{1, 2, 3})
 
 // From a string or bytes
 yarl.Post("http://github.com/inoc603").
@@ -112,7 +112,17 @@ yarl.Get("http://example.com").
 
 ### Redirect
 
-TODO
+```go
+// Set max redirect
+yarl.Get("http://example.com").
+        MaxRedirect(3)
+
+// Custom redirec policy
+yarl.Get("http://example.com").
+        RedirectPolicy(func(req *http.Request, via []*http.Request) error {
+                return http.ErrUseLastResponse
+        })
+```
 
 ### Unix Socket
 

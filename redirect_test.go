@@ -4,5 +4,5 @@ import (
 	"testing"
 )
 
-func TestTmp(t *testing.T) {
+func TestMaxRedirect(t *testing.T) {
 }
