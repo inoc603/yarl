@@ -67,7 +67,7 @@ func (resp *Response) Body() io.Reader {
 
 	go func() {
 		_, err := io.Copy(p.Writer(), resp.Raw.Body)
-		p.CloseRead(err)
+		p.CloseWrite(err)
 		resp.Raw.Body.Close()
 	}()
 

@@ -40,14 +40,20 @@ func (body *JSON) SetItem(k string, v interface{}) error {
 }
 
 func (body *JSON) Set(value interface{}) error {
-	data, err := json.Marshal(value)
-	if err != nil {
-		return err
-	}
+	// TODO: add to current data
+	switch v := value.(type) {
+	case string:
+		body.buffer = []byte(v)
+	case []byte:
+		// TODO: validate json?
+		body.buffer = v
+	default:
+		data, err := json.Marshal(value)
+		if err != nil {
+			return err
+		}
 
-	if body.buffer == nil {
 		body.buffer = data
-		return nil
 	}
 
 	return nil

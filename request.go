@@ -2,7 +2,6 @@ package yarl
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -43,6 +42,7 @@ func newReq(method string) *Request {
 	})
 
 	r := &Request{
+		method:      method,
 		successCode: []int{200},
 		header:      make(http.Header),
 		client:      &http.Client{Jar: jar},
@@ -152,7 +152,6 @@ func (req *Request) Do() *Response {
 	// will use the default policy of http.Client, which stops at 10 redirections
 	if len(req.redirectPolicies) > 0 {
 		req.client.CheckRedirect = func(r *http.Request, via []*http.Request) error {
-			fmt.Println("check", r)
 			for _, p := range req.redirectPolicies {
 				if err := p(r, via); err != nil {
 					return err

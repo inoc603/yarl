@@ -44,6 +44,7 @@ func (req *Request) doWithRetry(r *http.Request) *Response {
 		failed = append(failed, resp)
 
 		if i == req.retryMax-1 {
+			res = resp
 			return res
 		}
 
