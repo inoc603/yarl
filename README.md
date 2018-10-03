@@ -1,5 +1,7 @@
 # yarl
 
+[![GoDoc](https://godoc.org/github.com/inoc603/yarl?status.svg)](http://godoc.org/github.com/inoc603/yarl)
+
 Yet Another http Request Library in golang. Because why not ?
 
 **Work In Progress**
