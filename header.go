@@ -22,6 +22,10 @@ func (req *Request) Headers(v interface{}) *Request {
 	return req
 }
 
+func (req *Request) ContentType(t string) *Request {
+	return req.Header("Content-Type", t)
+}
+
 func (req *Request) Cookie(c *http.Cookie) *Request {
 	req.cookies = append(req.cookies, c)
 	return req

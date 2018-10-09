@@ -22,7 +22,7 @@ func (req *Request) Body(v interface{}) *Request {
 
 func (req *Request) JSON() *Request {
 	req.body = body.NewJSON()
-	return req
+	return req.ContentType(req.body.Type())
 }
 
 func (req *Request) Multipart() *Request {
