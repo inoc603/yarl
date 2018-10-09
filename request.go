@@ -113,7 +113,7 @@ type ResponseValidator func(*Response) bool
 // considered to be failed.
 func (req *Request) MaxCode(code int) *Request {
 	req.validator = func(resp *Response) bool {
-		return resp.StatusCode() < code
+		return resp.StatusCode() <= code
 	}
 	return req
 }
