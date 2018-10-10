@@ -90,6 +90,14 @@ yarl.Post("http://github.com/inoc603").
 
 yarl.Post("http://github.com/inoc603").
         Body([]byte(`{"key": { "nested": 1 }}`))
+
+// Setting json field
+yarl.Post("http://github.com/inoc603").
+        Set("field_1", "a").
+        Set("field_2", 1).
+        Set("field_3", map[string]interface{}{
+                "a": false,
+        })
 ```
 
 ### Multipart Body

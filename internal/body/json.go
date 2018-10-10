@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"strings"
 
-	"github.com/buger/jsonparser"
+	"github.com/tidwall/sjson"
 )
 
 type JSON struct {
@@ -14,7 +13,9 @@ type JSON struct {
 }
 
 func NewJSON() *JSON {
-	return &JSON{}
+	return &JSON{
+		buffer: []byte{},
+	}
 }
 
 func (body *JSON) Type() string {
@@ -26,16 +27,11 @@ func (body *JSON) Encode() io.ReadCloser {
 }
 
 func (body *JSON) SetItem(k string, v interface{}) error {
-	data, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	if body.buffer == nil {
-		body.buffer = make([]byte, 0)
-	}
-
-	_, err = jsonparser.Set(body.buffer, data, strings.Split(k, ".")...)
+	modified, err := sjson.SetBytesOptions(body.buffer, k, v, &sjson.Options{
+		Optimistic:     true,
+		ReplaceInPlace: true,
+	})
+	body.buffer = modified
 	return err
 }
 
