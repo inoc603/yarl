@@ -94,3 +94,8 @@ func (req *Request) Patch(url string, args ...interface{}) *Request {
 	req.method = PATCH
 	return req.setURL(url, args...)
 }
+
+func (req *Request) Method(method string) *Request {
+	req.method = method
+	return req
+}
