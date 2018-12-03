@@ -41,5 +41,4 @@ func TestQueries(t *testing.T) {
 		a.Equal("s", q.Get("string"))
 		a.Equal("1", q.Get("int"))
 	})
-
 }

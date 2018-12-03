@@ -4,17 +4,17 @@ package assert
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // A is a simple wrapper around assert.Assertions to provide easier sub testing
 type A struct {
-	*assert.Assertions
+	*require.Assertions
 	t *testing.T
 }
 
 func New(t *testing.T) *A {
-	return &A{assert.New(t), t}
+	return &A{require.New(t), t}
 }
 
 func (a *A) Run(name string, f func(a *A)) {

@@ -181,9 +181,3 @@ func (req *Request) DoMarshal(v interface{}) (*Response, error) {
 
 	return resp, resp.BodyMarshal(v)
 }
-
-// DoSilent makes the request and only returns the error. Whether a response is
-// valid or not can be deermined by MaxCode. The response body will not be read.
-func (req *Request) DoSilent() error {
-	return nil
-}

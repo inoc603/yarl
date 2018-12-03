@@ -15,16 +15,22 @@ func (req *Request) Set(k string, v interface{}) *Request {
 	return req
 }
 
+// Body sets the body to the given value. By default the body is in json.
 func (req *Request) Body(v interface{}) *Request {
+	if req.body == nil {
+		req.body = body.NewJSON()
+	}
 	req.err = req.body.Set(v)
 	return req
 }
 
+// JSON explicitly sets the body type to json.
 func (req *Request) JSON() *Request {
 	req.body = body.NewJSON()
 	return req.ContentType(req.body.Type())
 }
 
+// Multipart explicitly sets the body type to multipart
 func (req *Request) Multipart() *Request {
 	req.body = body.NewMultipart()
 	return req
@@ -54,7 +60,10 @@ func (req *Request) File(path string, field ...string) *Request {
 func (req *Request) FileFromReader(r io.Reader, name string, field string) *Request {
 	if _, ok := req.body.(*body.Multipart); !ok {
 		if !req.body.IsEmpty() {
-			req.err = errors.Errorf("there's already data in %s body", req.body.Type())
+			req.err = errors.Errorf(
+				"there's already data in %s body",
+				req.body.Type(),
+			)
 			return req
 		}
 	}
