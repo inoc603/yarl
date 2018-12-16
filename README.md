@@ -1,6 +1,7 @@
 # yarl
 
 [![GoDoc](https://godoc.org/github.com/inoc603/yarl?status.svg)](http://godoc.org/github.com/inoc603/yarl)
+[![CircleCI](https://circleci.com/gh/inoc603/yarl.svg?style=svg)](https://circleci.com/gh/inoc603/yarl)
 
 Yet Another http Request Library in golang. Because why not ?
 
@@ -91,6 +92,12 @@ yarl.Post("http://github.com/inoc603").
 yarl.Post("http://github.com/inoc603").
         Body([]byte(`{"key": { "nested": 1 }}`))
 
+// From a reader
+f, _ := os.Open("req.json")
+yarl.Post("http://github.com/inoc603").
+        Body(f)
+
+
 // Setting json field
 yarl.Post("http://github.com/inoc603").
         Set("field_1", "a").
@@ -148,7 +155,7 @@ yarl.Get("http://github.com/inoc603").
         Proxy("socks5://localhost:1080")  // SOCKS5 proxy
 ```
 
-## Custom Transport
+### Custom Transport
 
 ```go
 yarl.Get("http://github.com/inoc603").

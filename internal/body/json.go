@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"io/ioutil"
 
 	"github.com/tidwall/sjson"
 )
@@ -43,6 +44,13 @@ func (body *JSON) Set(value interface{}) error {
 	case []byte:
 		// TODO: validate json?
 		body.buffer = v
+	case io.Reader:
+		data, err := ioutil.ReadAll(v)
+		if err != nil {
+			return err
+		}
+
+		body.buffer = data
 	default:
 		data, err := json.Marshal(value)
 		if err != nil {
