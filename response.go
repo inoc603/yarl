@@ -76,6 +76,10 @@ func (resp *Response) Body() io.Reader {
 
 // BodyBytes returns the body as bytes
 func (resp *Response) BodyBytes() ([]byte, error) {
+	if resp.err != nil {
+		return nil, resp.err
+	}
+
 	return ioutil.ReadAll(resp.Body())
 }
 
@@ -88,6 +92,10 @@ func (resp *Response) BodyString() (string, error) {
 // BodyMarshal marshalls the body content to the given interface according to the
 // content type.
 func (resp *Response) BodyMarshal(v interface{}) error {
+	if resp.err != nil {
+		return resp.err
+	}
+
 	t, _, err := mime.ParseMediaType(resp.contentType())
 	if err != nil {
 		return errors.Wrap(err, "parse content-type")
@@ -103,5 +111,9 @@ func (resp *Response) BodyMarshal(v interface{}) error {
 // BodyJSON marshalls the body content to the given interface as JSON, regardless
 // of the Content-Type header in the response.
 func (resp *Response) BodyJSON(v interface{}) error {
+	if resp.err != nil {
+		return resp.err
+	}
+
 	return json.NewDecoder(resp.Body()).Decode(v)
 }

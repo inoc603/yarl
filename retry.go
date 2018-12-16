@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Retry sets the retry policy for the request
 func (req *Request) Retry(attempts int, interval time.Duration) *Request {
 	req.retryMax = attempts
 	req.retryInterval = interval

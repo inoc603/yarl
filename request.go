@@ -77,7 +77,27 @@ func (req *Request) URL(rawURL string) *Request {
 }
 
 func (req *Request) Copy() *Request {
-	return req
+	cp := &Request{
+		method:  req.method,
+		url:     copyURL(req.url),
+		cookies: req.cookies,
+		header:  req.header,
+
+		validator: req.validator,
+
+		redirectPolicies: req.redirectPolicies,
+
+		retryMax:      req.retryMax,
+		retryInterval: req.retryInterval,
+		successCode:   req.successCode,
+	}
+
+	if req.client != nil {
+		// TODO: copy client
+		cp.client = req.client
+	}
+
+	return cp
 }
 
 // Host sets a common host for all requests from this instance
@@ -167,17 +187,4 @@ func (req *Request) Do() *Response {
 	}
 
 	return req.doWithRetry(r)
-}
-
-// DoMarshal makes the request and marshal the response body to the given
-// interface according to the response content type. If the body can't be
-// marshalled, the body content can still be used from the response. If the
-// response is considered failed, the body will not be marshalled.
-func (req *Request) DoMarshal(v interface{}) (*Response, error) {
-	resp := req.Do()
-	if err := resp.Error(); err != nil {
-		return resp, err
-	}
-
-	return resp, resp.BodyMarshal(v)
 }

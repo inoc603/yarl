@@ -22,7 +22,8 @@ if resp.Error() == nil {
         // Get response body as a reader
         io.Copy(os.Stdout, resp.Body())
         // Get response as a string or bytes
-        fmt.Println(resp.BodyString(), resp.BodyBytes())
+        fmt.Println(resp.BodyString())
+        fmt.Println(resp.BodyBytes())
 }
 
 // Marshal response body to a struct
@@ -30,10 +31,9 @@ var body struct {
         K string `json:"k"`
 }
 
-resp, err := yarl.Get("http://example.com").
-        DoMarshal(&body)
+resp := yarl.Get("http://example.com").Do()
 
-if err != nil {
+if resp.BodyMarshal(&body); err != nil {
         // Response body can still be used if marshalling failed
         fmt.Printf("error: %v; body: %s", err, resp.BodyString())
 }
@@ -136,11 +136,26 @@ yarl.Get("http://example.com").
 
 ```go
 yarl.Get("http://whatever/v1.24/containers/json").
-        UnixSocket("/var/run/docker.sock").
-        Do()
+        UnixSocket("/var/run/docker.sock")
 ```
 
-### Reuse configurations
+### Proxy
+
+```go
+yarl.Get("http://github.com/inoc603").
+        Proxy("http://localhost:80").     // HTTP proxy
+        Proxy("https://localhost:443").   // HTTPS proxy
+        Proxy("socks5://localhost:1080")  // SOCKS5 proxy
+```
+
+## Custom Transport
+
+```go
+yarl.Get("http://github.com/inoc603").
+        Transport(&http.Transport{})
+```
+
+### Reuse Configurations
 
 TODO: Make reusing reqeust thread-safe
 
