@@ -76,6 +76,7 @@ func (resp *Response) Body() io.Reader {
 
 // BodyBytes returns the body as bytes
 func (resp *Response) BodyBytes() ([]byte, error) {
+	defer resp.closeRawBody()
 	if resp.err != nil {
 		return nil, resp.err
 	}
@@ -89,9 +90,17 @@ func (resp *Response) BodyString() (string, error) {
 	return string(b), err
 }
 
+func (resp *Response) closeRawBody() error {
+	if resp.Raw != nil && resp.Raw.Body != nil {
+		return resp.Raw.Body.Close()
+	}
+	return nil
+}
+
 // BodyMarshal marshalls the body content to the given interface according to the
 // content type.
 func (resp *Response) BodyMarshal(v interface{}) error {
+	defer resp.closeRawBody()
 	if resp.err != nil {
 		return resp.err
 	}
@@ -111,6 +120,7 @@ func (resp *Response) BodyMarshal(v interface{}) error {
 // BodyJSON marshalls the body content to the given interface as JSON, regardless
 // of the Content-Type header in the response.
 func (resp *Response) BodyJSON(v interface{}) error {
+	defer resp.closeRawBody()
 	if resp.err != nil {
 		return resp.err
 	}
